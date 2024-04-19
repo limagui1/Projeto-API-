@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo API Client</title>
+</head>
+<body>
+    <h1>Photo API Client</h1>
+
+    <!-- Seção de autenticação -->
+    <h2>Authentication</h2>
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="authenticate()">Authenticate</button>
+    <div id="authResult"></div>
+
+    <!-- Seção de upload de foto -->
+    <h2>Upload Photo</h2>
+    <input type="file" name="photo" id="photoFile"><br>
+    <button onclick="uploadPhoto()">Upload Photo</button>
+    <div id="uploadResult"></div>
+
+    <!-- Seção de consulta de contagem de fotos -->
+    <h2>Photo Count</h2>
+    <button onclick="getPhotoCount()">Get Photo Count</button>
+    <div id="photoCount"></div>
+
+    <script src="script.js">
+        // Função para autenticar o usuário
+        function authenticate() {
+            var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+
+            fetch('http://localhost:5000/auth', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: email, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('authResult').innerText = 'Token: ' + data.token;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Função para fazer o upload de uma foto
+        function uploadPhoto() {
+            var token = document.getElementById('authResult').innerText.split(':')[1].trim();
+            var photoFile = document.getElementById('photoFile').files[0];
+
+            var formData = new FormData();
+            formData.append('user_id', '123');
+            formData.append('photo', photoFile);
+
+            fetch('http://localhost:5000/upload_photo', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(token)
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('uploadResult').innerText = 'Photo: ' + data.photo.substring(0, 50) + '...';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Função para obter a contagem de fotos
+        function getPhotoCount() {
+            var token = document.getElementById('authResult').innerText.split(':')[1].trim();
+
+            fetch('http://localhost:5000/photo_count', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(token)
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('photoCount').innerText = 'Photo Count: ' + data.photo_count;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
